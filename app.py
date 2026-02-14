@@ -1,11 +1,12 @@
 import streamlit as st
-from openai import OpenAI
+import google.generativeai as genai
 import os
 import re
 
 st.set_page_config(page_title="AI Recipe Generator", page_icon="🍽️", layout="wide")
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+model = genai.GenerativeModel("gemini-1.5-flash")
 
 # Custom Styles
 st.markdown("""
@@ -103,16 +104,8 @@ INGREDIENTS:
 INSTRUCTIONS:
 1. step
 """
-                response = client.chat.completions.create(
-                    model="gpt-4o-mini",
-                    messages=[
-                        {"role": "system", "content": "You are a professional chef."},
-                        {"role": "user", "content": prompt}
-                    ],
-                    temperature=0.7
-                )
-
-                recipe_text = response.choices[0].message.content
+               response = model.generate_content(prompt)
+            recipe_text = response.text
 
                 # Parse Recipe
                 title = ""
