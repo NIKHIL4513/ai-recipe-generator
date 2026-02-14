@@ -1,14 +1,12 @@
 import streamlit as st
-import google.generativeai as genai
+from openai import OpenAI
 import os
 import re
 
 st.set_page_config(page_title="AI Recipe Generator", page_icon="🍽️", layout="wide")
 
-genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-model = genai.GenerativeModel("gemini-1.5-flash")
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
-# Custom Styles
 st.markdown("""
 <style>
 body {
@@ -71,18 +69,18 @@ ul, ol {
 </style>
 """, unsafe_allow_html=True)
 
-# Header
+
 st.markdown("<div class='header'>🍳 AI Recipe Generator</div>", unsafe_allow_html=True)
 st.markdown("<div class='subheader'>Enter ingredients and select cuisine to get your recipe</div>", unsafe_allow_html=True)
 
-# Input Section
+
 st.markdown("<div class='input-card'>", unsafe_allow_html=True)
 ingredients_input = st.text_area("🥕 Enter ingredients (comma-separated):", placeholder="e.g., rice, chicken, onion, egg")
 cuisine = st.selectbox("🌍 Select cuisine (optional):", ["Any", "Indian", "Chinese", "Italian", "Mexican", "Continental"])
 generate = st.button("✨ Generate Recipe")
 st.markdown("</div>", unsafe_allow_html=True)
 
-# Generate Recipe
+
 if generate:
     if ingredients_input.strip() == "":
         st.warning("⚠️ Please enter at least one ingredient.")
@@ -104,10 +102,18 @@ INGREDIENTS:
 INSTRUCTIONS:
 1. step
 """
-               response = model.generate_content(prompt)
-            recipe_text = response.text
+                response = client.chat.completions.create(
+                    model="gpt-4o-mini",
+                    messages=[
+                        {"role": "system", "content": "You are a professional chef."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.7
+                )
 
-                # Parse Recipe
+                recipe_text = response.choices[0].message.content
+
+              
                 title = ""
                 ingredients = []
                 instructions = []
@@ -127,7 +133,7 @@ INSTRUCTIONS:
 
                 st.success("✅ Recipe Generated Successfully!")
 
-                # Recipe Card
+                
                 st.markdown("<div class='recipe-card'>", unsafe_allow_html=True)
                 st.markdown(f"<h2 style='text-align:center; color:#ffd166;'>{title}</h2>", unsafe_allow_html=True)
 
